@@ -1,0 +1,81 @@
+-- This is a nuXmv version of an example Leslie Lamport used in a TLA+
+-- tutorial, taken from the movie "Die Hard 3". The idea is that you have
+-- two jugs, one holds 3 gallons and one holds 5 gallons. You can do
+-- any of the following operations:
+-- empty either jug
+-- fill either jug
+-- pour one jug into the other until either the source jug is empty
+-- or the destination jug is full.
+-- The goal is to get exactly 4 gallons into the 5 gallon jug.
+-- We find the solution by asserting to nuXmv that there can never
+-- be 4 gallons in the 5 gallon jug, and since it presents a counter-example,
+-- that counter-example is the solution.
+
+MODULE main
+ VAR
+   bucket3 : 0 .. 3;  -- The 3 gallon bucket contains between 0 and 3 gallons
+   bucket5 : 0 .. 5;  -- The 5 gallon bucket contains between 0 and 5 gallons
+
+   -- There are 6 different actions that can take place
+   action : { empty3, empty5, pour3into5, pour5into3, fill3, fill5 };
+
+   -- We split this process into two phases, first we choose what the
+   -- next action is, and then we execute the action
+   state : { choosing_action, executing_action};
+
+ ASSIGN
+   init(bucket3) := 0;
+   init(bucket5) := 0;
+   init(action) := empty3;
+   init(state) := choosing_action;
+
+   next(action) :=
+     case
+     -- If we are executing the action, don't try to pick a new one
+       state = executing_action : action;
+
+     -- Otherwise, if both buckets are non-empty and non-full, we can
+     -- do any of the six actions
+       state = choosing_action & bucket3 > 0 & bucket3 < 3 & bucket5 > 0 & bucket5 < 5 : { empty3, empty5, fill3, fill5, pour3into5, pour5into3};
+     -- If bucket 3 is full, and five is non-empty and non-full ...
+       state = choosing_action & bucket3 = 3 & bucket5 > 0 & bucket5 < 5 : { empty3, empty5, fill5, pour3into5};
+     -- If bucket 5 is full, and three is non-empty and non-full ...
+       state = choosing_action & bucket3 > 0 & bucket3 < 3 & bucket5 = 5 : { empty3, empty5, fill3, pour5into3};
+     -- If both buckets are full, all we can do is empty one of them
+       state = choosing_action & bucket3 = 3 & bucket5 = 5 : { empty3, empty5 };
+     -- If bucket 5 is empty and bucket 3 is non-empty ...
+       state = choosing_action & bucket3 > 0 & bucket3 <= 3 & bucket5 = 0 : { empty3, fill5, pour3into5 };
+     -- If bucket 3 is empty and bucket 5 is non-empty
+       state = choosing_action & bucket3 = 0 & bucket5 > 0 & bucket5 <= 5 : { fill3, empty5, pour5into3 };
+     -- If both buckets are empty
+       state = choosing_action & bucket3 = 0 & bucket5 = 0 : { fill3, fill5 };
+     esac;
+
+   next(bucket3) :=
+     case
+       state = executing_action & action = empty3 : 0;
+       state = executing_action & action = empty5 : bucket3;
+       state = executing_action & action = fill3 : 3;
+       state = executing_action & action = fill5 : bucket3;
+       state = executing_action & action = pour3into5 : max(0, bucket3 - (5 - bucket5));
+       state = executing_action & action = pour5into3 : min(3, bucket3 + bucket5);
+       state = choosing_action : bucket3;
+     esac;
+
+   next(bucket5) :=
+     case
+       state = executing_action & action = empty3 : bucket5;
+       state = executing_action & action = empty5 : 0;
+       state = executing_action & action = fill3 : bucket5;
+       state = executing_action & action = fill5 : 5;
+       state = executing_action & action = pour3into5 : min(5, bucket3 + bucket5);
+       state = executing_action & action = pour5into3 : max(0, bucket5 - (3 - bucket3));
+       state = choosing_action : bucket5;
+     esac;
+
+    next(state) :=
+      case
+        state = executing_action : choosing_action;
+        state = choosing_action : executing_action;
+      esac;
+ LTLSPEC G ! (bucket5 = 4);
