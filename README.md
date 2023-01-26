@@ -132,6 +132,11 @@ _Query_0000000000000000.requires :- /Users/mark/vandy/6315/solving-diehard3-wate
 .
 ```
 
+The `pr` command in Formula gives you a traceback of how it arrived at the
+current state, so you can see that it started with CurrState(0, 0) and
+then derived CurrState(0, 5) - it filled bucket 5. Then it goes to
+CurrState(3, 2), so it poured 5 into 3, and so forth.
+
 Notice that even after it first gets to a state where bucket5 has
 4 gallons in it, it keeps going. I created a second version called
 DieHardCheck4.4ml that includes guards to not create a new CurrState
