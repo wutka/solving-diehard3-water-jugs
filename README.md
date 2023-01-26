@@ -1,4 +1,4 @@
-# Solving the "Die Hard 3" water jug problem with nuVmx and Formula
+# Solving the "Die Hard 3" water jug problem with nuXmv and Formula
 
 Leslie Lamport does an example with TLA+ showing how you can
 get TLA+ to solve the water jug problem from the movie "Die Hard 3".
