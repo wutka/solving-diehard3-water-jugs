@@ -1,0 +1,39 @@
+domain DieHard
+{
+  CurrState ::= new ( bucket3 : Integer, bucket5 : Integer).
+
+// If bucket b3 is not full, you can fill it
+  CurrState(newb3, b5) :-
+    CurrState(b3, b5), b3 < 3, b5 != 4, newb3=3.
+
+// If bucket b5 is not full, you can fill it
+  CurrState(b3, newb5) :-
+    CurrState(b3, b5), b5 < 5, b5 != 4, newb5=5.
+
+// If bucket b3 is not empty, you can empty it
+  CurrState(newb3, b5) :-
+    CurrState(b3, b5), b3 > 0, b5 != 4, newb3=0.
+
+// If bucket b5 is not empty, you can empty it
+  CurrState(b3, newb5) :-
+    CurrState(b3, b5), b5 > 0, b5 != 4, newb5=0.
+
+// If bucket3 is not full and bucket5 is not empty,
+// you can pour bucket5 into bucket3
+  CurrState(newb3, newb5) :-
+    CurrState(b3, b5), b5 > 0, b5 != 4, b3 < 3,
+    newb3 = min(3, b3 + b5),
+    newb5 = max(0, b5 - (3 - b3)).
+
+// If bucket5 is not full and bucket3 is not empty,
+// you can pour bucket3 into bucket5
+  CurrState(newb3, newb5) :-
+    CurrState(b3, b5), b3 > 0, b5 != 4, b5 < 5,
+    newb3 = max(0, b3 - (5 - b5)),
+    newb5 = min(5, b3 + b5).
+}
+
+model StartFromEmpty of DieHard
+{
+  CurrState(0, 0).
+}
