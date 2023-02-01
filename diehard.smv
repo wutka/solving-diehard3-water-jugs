@@ -78,4 +78,5 @@ MODULE main
         state = executing_action : choosing_action;
         state = choosing_action : executing_action;
       esac;
- LTLSPEC G ! (bucket5 = 4);
+   INVARSPEC bucket5 != 4;
+-- LTLSPEC G ! (bucket5 = 4);
